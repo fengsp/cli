@@ -3,6 +3,7 @@
 // Licensed under the BSD License, see LICENSE for more details.
 
 use std::os;
+use std::path::Path;
 
 use types::{Params, CommandCallback};
 
@@ -39,7 +40,19 @@ impl Command {
     pub fn get_help(&self) -> String {
     }
 
-    pub fn invoke(&self) {
-        let args = os::args();
+    /// This invokes the command with given arguments.
+    pub fn invoke(&self, pragram_name: String, args: Vec<String>) {
+    }
+
+    /// Create the parser and parses the arguments.
+    fn parse_args(&self, args: Vec<String>) {
+    }
+
+    /// This is the way to run one command application.
+    pub fn run(&self) {
+        let mut args = os::args();
+        let program_path = Path::new(args.remove(0).as_slice());
+        let program_name = program_path.file_name().unwrap().to_str().unwrap();
+        self.invoke(program_name.to_string(), args);
     }
 }
