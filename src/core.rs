@@ -42,6 +42,8 @@ impl Command {
 
     /// This invokes the command with given arguments.
     pub fn invoke(&self, pragram_name: String, args: Vec<String>) {
+        let args = self.parse_args(args);
+        self.callback(
     }
 
     /// Create the parser and parses the arguments.
