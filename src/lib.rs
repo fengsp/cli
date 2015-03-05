@@ -8,6 +8,8 @@
 #![crate_type = "lib"]
 #![deny(non_camel_case_types)]
 
+extern crate getopts;
+
 /* public api */
 pub use core::Cli;
 

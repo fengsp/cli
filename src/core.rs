@@ -34,6 +34,18 @@ impl Command {
         }
     }
 
+    /// Attaches an option to the command.
+    pub fn option(&self) {
+        let option = Option::new();
+        self.params.push(option);
+    }
+
+    /// Attaches an argument to the command.
+    pub fn argument(&self) {
+        let argument = Argument::new();
+        self.params.push(argument);
+    }
+
     pub fn get_usage(&self) -> String {
     }
 
@@ -43,7 +55,15 @@ impl Command {
     /// This invokes the command with given arguments.
     pub fn invoke(&self, pragram_name: String, args: Vec<String>) {
         let args = self.parse_args(args);
-        self.callback(
+        self.callback(args);
+    }
+
+    /// Creates the underlying option parser for this command.
+    fn make_parser(&self) {
+        let parser = getopts::Options::new();
+        for param in self.get_params():
+            param.add_to_parser(parser, ctx)
+        return parser;
     }
 
     /// Create the parser and parses the arguments.
@@ -57,4 +77,32 @@ impl Command {
         let program_name = program_path.file_name().unwrap().to_str().unwrap();
         self.invoke(program_name.to_string(), args);
     }
+}
+
+
+struct Option {
+    short_name: String,
+    long_name: String,
+    help: String,
+    required: bool,
+    is_flag: bool,
+    default: Option<String>,
+}
+
+impl Option {
+    pub fn new() -> Option {
+        Option {
+            short_name: short_name,
+            long_name: long_name,
+            required: required,
+            default: default,
+        }
+    }
+}
+
+
+struct Argument {
+    name: String,
+    required: bool,
+    default: Option<String>,
 }
