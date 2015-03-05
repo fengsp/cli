@@ -80,7 +80,8 @@ impl Command {
 }
 
 
-struct Option {
+/// Options are usually optional values on the command line.
+struct Options {
     short_name: String,
     long_name: String,
     help: String,
@@ -89,9 +90,9 @@ struct Option {
     default: Option<String>,
 }
 
-impl Option {
-    pub fn new() -> Option {
-        Option {
+impl Options {
+    pub fn new() -> Options {
+        Options {
             short_name: short_name,
             long_name: long_name,
             required: required,
@@ -105,4 +106,17 @@ struct Argument {
     name: String,
     required: bool,
     default: Option<String>,
+}
+
+impl Argument {
+    pub fn new() -> Argument {
+        Argument {
+            name: name,
+            required: required,
+            default: default,
+        }
+    }
+
+    pub fn add_to_parser(&self, parser) {
+    }
 }
