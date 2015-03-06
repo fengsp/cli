@@ -11,7 +11,8 @@
 extern crate getopts;
 
 /* public api */
-pub use core::Cli;
+pub use core::Command;
 
 mod core;
 mod types;
+mod utils;

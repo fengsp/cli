@@ -5,7 +5,11 @@
 use std::os;
 use std::path::Path;
 
+use getopts;
+
 use types::{Params, CommandCallback};
+use types::{Options, Argument};
+use utils::print;
 
 
 /// The command is the basic type of command line applications in cli.  This
@@ -13,7 +17,8 @@ use types::{Params, CommandCallback};
 pub struct Command {
     name: String,  // The name of the command to use
     callback: CommandCallback,  // The callback to execute
-    params: Params,  // The parameters to register with this command
+    options: Vec<Options>,  // The options to register with this command
+    arguments: Vec<Argument>,  // The arguments to register with this command
     help: String,  // The help message to use for this command
     epilog: String,  // Printed at the end of the help page
     short_help: String,  // The short help to use for this command, this is shown on the command listing of the parent command
@@ -26,7 +31,8 @@ impl Command {
         Command {
             name: name.to_string(),
             callback: callback,
-            params: Vec::new(),
+            options: Vec::new(),
+            arguments: Vec::new(),
             help: String::new(),
             epilog: String::new(),
             short_help: String::new(),
@@ -35,88 +41,66 @@ impl Command {
     }
 
     /// Attaches an option to the command.
-    pub fn option(&self) {
-        let option = Option::new();
-        self.params.push(option);
+    pub fn option(&mut self, short_name: &'static str, long_name: &'static str, help: &'static str,
+                  is_flag: bool, is_bool_flag: bool, multiple: bool,
+                  required: bool, default: Option<&'static str>) {
+        let option = Options::new(short_name, long_name, help, is_flag,
+                                  is_bool_flag, multiple, required, default);
+        self.options.push(option);
     }
 
     /// Attaches an argument to the command.
-    pub fn argument(&self) {
-        let argument = Argument::new();
-        self.params.push(argument);
+    pub fn argument(&mut self, name: &'static str, required: bool, default: Option<&'static str>) {
+        let argument = Argument::new(name, required, default);
+        self.arguments.push(argument);
     }
 
-    pub fn get_usage(&self) -> String {
+    pub fn get_usage(&self) {
     }
 
     pub fn get_help(&self) -> String {
+        "help".to_string()
+    }
+
+    /// Returns the help option.
+    fn get_help_option(&self) -> Options {
+        let help_option_names = vec!["h", "help"];
+        let show_help = |params: Params| {
+            print(self.get_help());
+        };
+        return Options::new(help_option_names[0], help_option_names[1],
+                            "Show this message and exit.", true, true, false, false, None);
     }
 
     /// This invokes the command with given arguments.
     pub fn invoke(&self, pragram_name: String, args: Vec<String>) {
         let args = self.parse_args(args);
-        self.callback(args);
+        let callback = self.callback;
+        callback(args);
     }
 
     /// Creates the underlying option parser for this command.
-    fn make_parser(&self) {
-        let parser = getopts::Options::new();
-        for param in self.get_params():
-            param.add_to_parser(parser, ctx)
+    fn make_parser(&self) -> getopts::Options {
+        let mut parser = getopts::Options::new();
+        for option in self.options.iter() {
+            option.add_to_parser(&mut parser);
+        }
+        let help_option = self.get_help_option();
+        help_option.add_to_parser(&mut parser);
         return parser;
     }
 
     /// Create the parser and parses the arguments.
-    fn parse_args(&self, args: Vec<String>) {
+    fn parse_args(&self, args: Vec<String>) -> Vec<String> {
+        args
     }
 
     /// This is the way to run one command application.
     pub fn run(&self) {
         let mut args = os::args();
-        let program_path = Path::new(args.remove(0).as_slice());
+        let program = args.remove(0);
+        let program_path = Path::new(program.as_slice());
         let program_name = program_path.file_name().unwrap().to_str().unwrap();
         self.invoke(program_name.to_string(), args);
-    }
-}
-
-
-/// Options are usually optional values on the command line.
-struct Options {
-    short_name: String,
-    long_name: String,
-    help: String,
-    required: bool,
-    is_flag: bool,
-    default: Option<String>,
-}
-
-impl Options {
-    pub fn new() -> Options {
-        Options {
-            short_name: short_name,
-            long_name: long_name,
-            required: required,
-            default: default,
-        }
-    }
-}
-
-
-struct Argument {
-    name: String,
-    required: bool,
-    default: Option<String>,
-}
-
-impl Argument {
-    pub fn new() -> Argument {
-        Argument {
-            name: name,
-            required: required,
-            default: default,
-        }
-    }
-
-    pub fn add_to_parser(&self, parser) {
     }
 }
