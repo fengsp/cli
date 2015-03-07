@@ -58,7 +58,17 @@ impl Color {
 }
 
 
-/// Styles a text with ANSI styles.
+/// Styles a text with ANSI styles.  This styling is self contained which means
+/// that at the end of the string a reset code is issued.  Examples:
+///
+/// ```rust,no_run
+/// use cli::{Style, Red};
+///
+/// let mut text = Style::new(String::from_str("hello"));
+/// text.fg(Red);
+/// println!("{}", text);
+/// ```
+///
 pub struct Style {
     text: String,
     fg: Option<Color>,
@@ -71,6 +81,7 @@ pub struct Style {
 }
 
 impl Style {
+    /// Create one new styled string with ansi codes.
     pub fn new(text: String) -> Style {
         Style {
             text: text,
@@ -94,22 +105,27 @@ impl Style {
         self.bg = Some(color);
     }
 
+    /// Enable or disable bold mode.
     pub fn bold(&mut self, bold: bool) {
         self.bold = Some(bold);
     }
 
+    /// Enable or disable dim mode.
     pub fn dim(&mut self, dim: bool) {
         self.dim = Some(dim);
     }
 
+    /// Enable or disable underline.
     pub fn underline(&mut self, underline: bool) {
         self.underline = Some(underline);
     }
 
+    /// Enable or disable blinking.
     pub fn blink(&mut self, blink: bool) {
         self.blink = Some(blink);
     }
 
+    /// Enable or disable inverse rendering.
     pub fn reverse(&mut self, reverse: bool) {
         self.reverse = Some(reverse);
     }
