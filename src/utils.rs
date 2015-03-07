@@ -2,20 +2,24 @@
 // Copyright (c) 2015 by Shipeng Feng.
 // Licensed under the BSD License, see LICENSE for more details.
 
-use std::io;
+use term::{Color, Style};
+
 
 pub fn print(message: String) {
     print!("{}", message);
 }
 
 
-pub fn style(text: String, fg: &str, bg: &str, bold: bool, underline: bool,
-             blink: bool, reverse: bool, reset: bool) -> String {
-    let mut bytes: Vec<u8> = Vec::new();
-    bytes.push(27 as u8);
-    bytes.push('[' as u8);
-    bytes.push(32 as u8);
-    bytes.push('m' as u8);
-    bytes.push_all(text.as_bytes());
-    io::stdout().write(bytes);
+/// Styles the message with ANSI styles and println it.
+pub fn sprintln(message: String, fg: Color, bg: Color, bold: bool, dim: bool,
+                underline: bool, blink: bool, reverse: bool) {
+    let mut text = Style::new(message);
+    text.fg(fg);
+    text.bg(bg);
+    text.bold(bold);
+    text.dim(dim);
+    text.underline(underline);
+    text.blink(blink);
+    text.reverse(reverse);
+    println!("{}", text);
 }

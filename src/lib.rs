@@ -12,7 +12,21 @@ extern crate getopts;
 
 /* public api */
 pub use core::Command;
+pub use utils::sprintln;
+pub use term::{
+    Style,
+    Color,
+        Black,
+        Red,
+        Green,
+        Yellow,
+        Blue,
+        Magenta,
+        Cyan,
+        White,
+};
 
 mod core;
 mod types;
 mod utils;
+mod term;
