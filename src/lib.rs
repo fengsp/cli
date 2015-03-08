@@ -25,6 +25,7 @@ pub use term::{
         Cyan,
         White,
     prompt,
+    confirm,
 };
 
 mod core;

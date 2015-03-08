@@ -4,6 +4,7 @@
 
 use std::old_io;
 use std::fmt;
+use std::ascii::AsciiExt;
 
 pub use self::Color::{
     Black,
@@ -191,7 +192,7 @@ impl fmt::Display for Style {
 
 
 fn build_prompt_text(text: &str, suffix: &str, show_default: bool,
-                     default: Option<String>) -> String {
+                     default: Option<&str>) -> String {
     let prompt_text: String;
     if default.is_some() && show_default {
         prompt_text = format!("{} [{}]", text, default.unwrap());
@@ -205,7 +206,7 @@ fn build_prompt_text(text: &str, suffix: &str, show_default: bool,
 fn get_prompt_input(prompt_text: &str, hide_input: bool) -> String {
     print!("{}", prompt_text);
     let input = old_io::stdin().read_line().ok().expect("Failed to read line");
-    return input.trim().to_string();
+    return input.trim_right_matches("\n").to_string();
 }
 
 
@@ -218,7 +219,7 @@ fn get_prompt_input(prompt_text: &str, hide_input: bool) -> String {
 /// - `prompt_suffix` - a suffix that should be added to the prompt
 /// - `show_default` - shows or hides the default value
 ///
-pub fn prompt(text: &str, default: Option<String>, hide_input: bool, confirmation: bool,
+pub fn prompt(text: &str, default: Option<&str>, hide_input: bool, confirmation: bool,
               prompt_suffix: &str, show_default: bool) -> String {
     let prompt_text = build_prompt_text(text, prompt_suffix, show_default, default.clone());
 
@@ -228,7 +229,7 @@ pub fn prompt(text: &str, default: Option<String>, hide_input: bool, confirmatio
         if prompt_input != String::from_str("") {
             break
         } else if default.is_some() {
-            return default.unwrap();
+            return default.unwrap().to_string();
         }
     }
 
@@ -246,5 +247,38 @@ pub fn prompt(text: &str, default: Option<String>, hide_input: bool, confirmatio
         return prompt_input;
     } else {
         panic!("Error: the two entered values do not match");
+    }
+}
+
+
+/// Prompts for confirmation (yes/no question).
+///
+/// - `text` - the question to ask
+/// - `default` - the default for the prompt
+/// - `prompt_suffix` - a suffix that should be added to the prompt
+/// - `show_default` - shows or hides the default value
+///
+pub fn confirm(text: &str, default: bool, prompt_suffix: &str, show_default: bool) -> bool {
+    let default_string = match default {
+        true  => Some("Y/n"),
+        false => Some("y/N"),
+    };
+    let prompt_text = build_prompt_text(text, prompt_suffix, show_default, default_string);
+
+    loop {
+        let prompt_lower_input = get_prompt_input(prompt_text.as_slice(), false).to_ascii_lowercase();
+        let prompt_input = prompt_lower_input.trim();
+        let prompt_result: bool;
+        if prompt_input == "y" || prompt_input == "yes" {
+            prompt_result = true;
+        } else if prompt_input == "n" || prompt_input == "no" {
+            prompt_result = false;
+        } else if prompt_input == "" {
+            prompt_result = default;
+        } else {
+            println!("Error: invalid input");
+            continue
+        }
+        return prompt_result;
     }
 }
