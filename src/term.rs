@@ -2,6 +2,7 @@
 // Copyright (c) 2015 by Shipeng Feng.
 // Licensed under the BSD License, see LICENSE for more details.
 
+use std::old_io;
 use std::fmt;
 
 pub use self::Color::{
@@ -185,5 +186,65 @@ impl fmt::Display for Style {
         try!(f.write_str("\x1b[0m"));
 
         Ok(())
+    }
+}
+
+
+fn build_prompt_text(text: &str, suffix: &str, show_default: bool,
+                     default: Option<String>) -> String {
+    let prompt_text: String;
+    if default.is_some() && show_default {
+        prompt_text = format!("{} [{}]", text, default.unwrap());
+    } else {
+        prompt_text = text.to_string();
+    }
+    prompt_text + suffix
+}
+
+
+fn get_prompt_input(prompt_text: &str, hide_input: bool) -> String {
+    print!("{}", prompt_text);
+    let input = old_io::stdin().read_line().ok().expect("Failed to read line");
+    return input.trim().to_string();
+}
+
+
+/// Prompts a user for input.
+///
+/// - `text` - the text to show for the prompt.
+/// - `default` - the default value to use if no input happens.
+/// - `hide_input` - the input value will be hidden
+/// - `confirmation` - asks for confirmation for the value
+/// - `prompt_suffix` - a suffix that should be added to the prompt
+/// - `show_default` - shows or hides the default value
+///
+pub fn prompt(text: &str, default: Option<String>, hide_input: bool, confirmation: bool,
+              prompt_suffix: &str, show_default: bool) -> String {
+    let prompt_text = build_prompt_text(text, prompt_suffix, show_default, default.clone());
+
+    let mut prompt_input: String;
+    loop {
+        prompt_input = get_prompt_input(prompt_text.as_slice(), hide_input);
+        if prompt_input != String::from_str("") {
+            break
+        } else if default.is_some() {
+            return default.unwrap();
+        }
+    }
+
+    if !confirmation {
+        return prompt_input;
+    }
+    let mut confirm_input: String;
+    loop {
+        confirm_input = get_prompt_input("Repeat for confirmation: ", hide_input);
+        if confirm_input != String::from_str("") {
+            break
+        }
+    }
+    if prompt_input == confirm_input {
+        return prompt_input;
+    } else {
+        panic!("Error: the two entered values do not match");
     }
 }

@@ -5,11 +5,6 @@
 use term::{Color, Style};
 
 
-pub fn print(message: String) {
-    print!("{}", message);
-}
-
-
 /// Styles the message with ANSI styles and println it.
 pub fn sprintln(message: String, fg: Color, bg: Color, bold: bool, dim: bool,
                 underline: bool, blink: bool, reverse: bool) {

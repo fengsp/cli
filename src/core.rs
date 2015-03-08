@@ -9,7 +9,6 @@ use getopts;
 
 use types::{Params, CommandCallback};
 use types::{Options, Argument};
-use utils::print;
 
 
 /// The command is the basic type of command line applications in cli.  This
@@ -66,7 +65,7 @@ impl Command {
     fn get_help_option(&self) -> Options {
         let help_option_names = vec!["h", "help"];
         let show_help = |params: Params| {
-            print(self.get_help());
+            print!("{}", self.get_help());
         };
         return Options::new(help_option_names[0], help_option_names[1],
                             "Show this message and exit.", true, true, false, false, None);

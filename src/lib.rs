@@ -24,6 +24,7 @@ pub use term::{
         Magenta,
         Cyan,
         White,
+    prompt,
 };
 
 mod core;
