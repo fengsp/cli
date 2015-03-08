@@ -3,6 +3,12 @@
 name = "cli"
 version = "0.0.1"
 authors = ["Shipeng Feng <fsp261@gmail.com>"]
+license = "BSD"
+readme = "README.md"
+repository = "https://github.com/fengsp/cli"
+homepage = "https://github.com/fengsp/cli"
+documentation = "http://fengsp.github.io/cli"
+description = "One Rust crate for creating beautiful command line applications."
 
 [dependencies]
 getopts = "*"

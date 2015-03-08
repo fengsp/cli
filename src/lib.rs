@@ -6,12 +6,14 @@
 
 #![crate_name = "cli"]
 #![crate_type = "lib"]
+#![doc(html_logo_url = "http://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
+       html_favicon_url = "http://www.rust-lang.org/favicon.ico",
+       html_root_url = "http://fengsp.github.io/cli/")]
 #![deny(non_camel_case_types)]
 
 extern crate getopts;
 
 /* public api */
-pub use core::Command;
 pub use utils::sprintln;
 pub use term::{
     Style,
@@ -28,7 +30,5 @@ pub use term::{
     confirm,
 };
 
-mod core;
-mod types;
 mod utils;
 mod term;
