@@ -266,19 +266,12 @@ pub fn confirm(text: &str, default: bool, prompt_suffix: &str, show_default: boo
     let prompt_text = build_prompt_text(text, prompt_suffix, show_default, default_string);
 
     loop {
-        let prompt_lower_input = get_prompt_input(prompt_text.as_slice(), false).to_ascii_lowercase();
-        let prompt_input = prompt_lower_input.trim();
-        let prompt_result: bool;
-        if prompt_input == "y" || prompt_input == "yes" {
-            prompt_result = true;
-        } else if prompt_input == "n" || prompt_input == "no" {
-            prompt_result = false;
-        } else if prompt_input == "" {
-            prompt_result = default;
-        } else {
-            println!("Error: invalid input");
-            continue
+        let prompt_input = get_prompt_input(prompt_text.as_slice(), false).to_ascii_lowercase();
+        match prompt_input.trim() {
+            "y" | "yes" => { return true; },
+            "n" | "no"  => { return false; },
+            ""          => { return default; },
+            _           => { println!("Error: invalid input"); },
         }
-        return prompt_result;
     }
 }
