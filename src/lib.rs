@@ -11,6 +11,7 @@
        html_root_url = "http://fengsp.github.io/cli/")]
 #![deny(non_camel_case_types)]
 
+extern crate libc;
 extern crate getopts;
 
 /* public api */
@@ -28,6 +29,7 @@ pub use term::{
         White,
     prompt,
     confirm,
+    get_terminal_size,
 };
 
 mod core;

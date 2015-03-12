@@ -1,10 +1,15 @@
-// This module implements terminal related stuff.
+// This module implements terminal related helpers.
 // Copyright (c) 2015 by Shipeng Feng.
 // Licensed under the BSD License, see LICENSE for more details.
 
 use std::old_io;
 use std::fmt;
 use std::ascii::AsciiExt;
+use std::io;
+
+use libc;
+use libc::funcs::bsd44::ioctl;
+
 
 pub use self::Color::{
     Black,
@@ -214,7 +219,7 @@ fn get_prompt_input(prompt_text: &str, hide_input: bool) -> String {
 ///
 /// - `text` - the text to show for the prompt.
 /// - `default` - the default value to use if no input happens.
-/// - `hide_input` - the input value will be hidden
+/// - `hide_input` - the input value will be hidden (TODO)
 /// - `confirmation` - asks for confirmation for the value
 /// - `prompt_suffix` - a suffix that should be added to the prompt
 /// - `show_default` - shows or hides the default value
@@ -273,5 +278,39 @@ pub fn confirm(text: &str, default: bool, prompt_suffix: &str, show_default: boo
             ""          => { return default; },
             _           => { println!("Error: invalid input"); },
         }
+    }
+}
+
+
+#[repr(C)]
+struct WinSize {
+    ws_row: libc::c_ushort,  // rows, in characters
+    ws_col: libc::c_ushort,  // columns, in characters
+    ws_xpixel: libc::c_ushort,  // whorizontal size, pixels
+    ws_ypixel: libc::c_ushort,  // vertical size, pixels
+}
+
+const TIOCGWINSZ: libc::c_ulong = 0x40087468;
+
+/// Returns the current size of the terminal in the form
+/// `(width, height)` in columns and rows, usage example:
+///
+/// ```rust,no_run
+/// use cli::get_terminal_size;
+///
+/// let (width, height) = get_terminal_size().unwrap();
+/// ```
+///
+pub fn get_terminal_size() -> io::Result<(isize, isize)> {
+    let w = WinSize {
+        ws_row: 0,
+        ws_col: 0,
+        ws_xpixel: 0,
+        ws_ypixel: 0
+    };
+    let r = unsafe { ioctl(libc::STDOUT_FILENO, TIOCGWINSZ, &w) };
+    match r {
+        0 => Ok((w.ws_col as isize, w.ws_row as isize)),
+        code => Err(io::Error::from_os_error(code)),
     }
 }
