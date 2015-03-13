@@ -6,6 +6,8 @@ use std::old_io;
 use std::fmt;
 use std::ascii::AsciiExt;
 use std::io;
+use std::process;
+use std::io::Write;
 
 use libc;
 use libc::funcs::bsd44::ioctl;
@@ -313,4 +315,15 @@ pub fn get_terminal_size() -> io::Result<(isize, isize)> {
         0 => Ok((w.ws_col as isize, w.ws_row as isize)),
         code => Err(io::Error::from_os_error(code)),
     }
+}
+
+
+/// Show text via an pager.
+pub fn print_via_pager(text: &str) {
+    let mut pager = process::Command::new("less").stdin(process::Stdio::capture())
+                                                 .spawn()
+                                                 .unwrap_or_else(|e| { panic!("failed to spawn less: {}", e) });
+    pager.stdin.as_mut().unwrap().write_all(text.as_bytes())
+               .unwrap_or_else(|e| { panic!("failed to write to less: {}", e) });
+    pager.wait();
 }

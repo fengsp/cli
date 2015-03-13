@@ -30,6 +30,7 @@ pub use term::{
     prompt,
     confirm,
     get_terminal_size,
+    print_via_pager,
 };
 
 mod core;
