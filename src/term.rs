@@ -327,3 +327,27 @@ pub fn print_via_pager(text: &str) {
                .unwrap_or_else(|e| { panic!("failed to write to less: {}", e) });
     pager.wait();
 }
+
+
+/// Check output device is a terminal or not.
+pub fn isatty() -> bool {
+    let isatty = unsafe { libc::isatty(libc::STDOUT_FILENO) };
+    isatty != 0
+}
+
+
+/// Clears the terminal screen.
+pub fn clear() {
+    old_io::stdout().write_all("\x1b[2J\x1b[1;1H".as_bytes()).unwrap()
+}
+
+
+/// Showing a progress bar.
+///
+/// - `length` - the number of items to iterate over.
+/// - `label` - the label to show next to the progress bar.
+/// - `fill_char` - the character to use to show the filled part.
+/// - `empty_char` - the character to use to show the non-filled part.
+/// - `width` - the width of the progress bar in characters.
+pub fn progressbar() {
+}

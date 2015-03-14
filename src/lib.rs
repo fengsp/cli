@@ -31,6 +31,8 @@ pub use term::{
     confirm,
     get_terminal_size,
     print_via_pager,
+    isatty,
+    clear,
 };
 
 mod core;
