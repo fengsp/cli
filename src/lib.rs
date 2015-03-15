@@ -12,6 +12,7 @@
 #![deny(non_camel_case_types)]
 
 extern crate libc;
+extern crate time;
 extern crate getopts;
 
 /* public api */
@@ -33,6 +34,7 @@ pub use term::{
     print_via_pager,
     isatty,
     clear,
+    ProgressBar,
 };
 
 mod core;
