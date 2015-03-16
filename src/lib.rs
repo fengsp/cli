@@ -35,6 +35,7 @@ pub use term::{
     isatty,
     clear,
     ProgressBar,
+    Editor,
 };
 
 mod core;

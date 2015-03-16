@@ -8,7 +8,12 @@ use std::ascii::AsciiExt;
 use std::io;
 use std::str;
 use std::process;
-use std::io::Write;
+use std::io::{Read, Write};
+use std::old_path::GenericPath;
+use std::collections::HashMap;
+use std::path::Path;
+use std::fs::File;
+use std::old_io::TempDir;
 
 use libc;
 use libc::funcs::bsd44::ioctl;
@@ -326,7 +331,7 @@ pub fn print_via_pager(text: &str) {
                                                  .unwrap_or_else(|e| { panic!("failed to spawn less: {}", e) });
     pager.stdin.as_mut().unwrap().write_all(text.as_bytes())
                .unwrap_or_else(|e| { panic!("failed to write to less: {}", e) });
-    pager.wait();
+    pager.wait().unwrap();
 }
 
 
@@ -506,5 +511,78 @@ impl ProgressBar {
         self.avgs.insert(0, avg);
         self.avgs.truncate(10);
         self.render_progress();
+    }
+}
+
+
+pub struct Editor {
+    editor: &'static str,
+    env_map: HashMap<&'static str, &'static str>,
+}
+
+impl Editor {
+    pub fn new(editor: &'static str) -> Editor {
+        Editor {
+            editor: editor,
+            env_map: HashMap::new(),
+        }
+    }
+
+    /// Inserts or updates an environment variable mapping.
+    pub fn env(&mut self, key: &'static str, value: &'static str) {
+        self.env_map.insert(key, value);
+    }
+
+    /// Edit a file.  Examples:
+    ///
+    /// ```rust,no_run
+    /// use cli::Editor;
+    ///
+    /// let editor = Editor::new("vim");
+    /// editor.edit_file("/path/to/myfile.py");
+    /// ```
+    ///
+    pub fn edit_file(&self, filename: &str) {
+        let mut edit = process::Command::new(self.editor);
+        edit.arg(filename);
+        for (k, v) in self.env_map.iter() {
+            edit.env(k, v);
+        }
+        let status = edit.status().unwrap_or_else(|e| {
+            panic!("Editing failed: {}", e)
+        });
+        if !status.success() {
+            panic!("Editing failed!")
+        }
+    }
+
+    /// Edit some text.  Examples:
+    ///
+    /// ```rust,no_run
+    /// use cli::Editor;
+    ///
+    /// let editor = Editor::new("vim");
+    /// let text = String::from_str("hello");
+    /// let edited = editor.edit(text, ".txt");
+    /// ```
+    ///
+    pub fn edit(&self, text: String, extension: &str) -> String {
+        let tmpdir = TempDir::new("cli").unwrap();
+        let tmpname = "cli_eidtor".to_string() + extension;
+        let mut filepath = tmpdir.path().clone();
+        filepath.push(tmpname.as_slice());
+        let filename = filepath.as_str().unwrap();
+        let mut tmpfile = File::create(filename).unwrap();
+        tmpfile.write(text.as_bytes()).unwrap();
+        tmpfile.flush().unwrap();
+
+        self.edit_file(filename);
+
+        let mut edited_file = File::open(filename).unwrap();
+        let mut edited_text = String::new();
+        edited_file.read_to_string(&mut edited_text).unwrap();
+        old_io::fs::unlink(&filepath).unwrap();
+        
+        return edited_text;
     }
 }
