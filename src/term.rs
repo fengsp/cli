@@ -515,12 +515,14 @@ impl ProgressBar {
 }
 
 
+/// One editor for you to edit the given text or file.
 pub struct Editor {
     editor: &'static str,
     env_map: HashMap<&'static str, &'static str>,
 }
 
 impl Editor {
+    /// Create one new editor.
     pub fn new(editor: &'static str) -> Editor {
         Editor {
             editor: editor,
