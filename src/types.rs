@@ -80,4 +80,11 @@ impl Argument {
 
     pub fn add_to_parser(&self, parser: &mut getopts::Options) {
     }
+
+    pub fn get_usage_piece(&self) -> String {
+        match self.required {
+            true => format!("{}", self.name),
+            false => format!("[{}]", self.name),
+        }
+    }
 }

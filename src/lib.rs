@@ -42,3 +42,4 @@ mod core;
 mod types;
 mod utils;
 mod term;
+mod formatting;

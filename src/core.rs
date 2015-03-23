@@ -55,6 +55,11 @@ impl Command {
     }
 
     pub fn get_usage(&self) {
+        let mut pieces: Vec<String> = Vec::new();
+        pieces.push("[OPTIONS]".to_string());
+        for argument in self.arguments.iter() {
+            pieces.push(argument.get_usage_piece());
+        }
     }
 
     pub fn get_help(&self) -> String {
