@@ -4,11 +4,13 @@
 
 use std::os;
 use std::path::Path;
+use std::slice::SliceConcatExt;
 
 use getopts;
 
 use types::{Params, CommandCallback};
 use types::{Options, Argument};
+use formatting::HelpFormatter;
 
 
 /// The command is the basic type of command line applications in cli.  This
@@ -54,16 +56,52 @@ impl Command {
         self.arguments.push(argument);
     }
 
-    pub fn get_usage(&self) {
+    fn make_formatter(&self) -> HelpFormatter {
+        HelpFormatter::new(80, 2)
+    }
+
+    fn format_usage(&self, formatter: &mut HelpFormatter) {
         let mut pieces: Vec<String> = Vec::new();
         pieces.push("[OPTIONS]".to_string());
         for argument in self.arguments.iter() {
             pieces.push(argument.get_usage_piece());
         }
+        formatter.write_usage(self.name.as_slice(), pieces.concat(), "Usage: ")
+    }
+
+    pub fn get_usage(&self) -> String {
+        let mut formatter = self.make_formatter();
+        self.format_usage(&mut formatter);
+        formatter.getvalue()
+    }
+
+    fn format_help_text(&self, formatter: &mut HelpFormatter) {
+        if !self.help.is_empty() {
+            formatter.write_paragraph();
+            formatter.indent();
+            formatter.write_text(self.help.clone());
+            formatter.dedent();
+        }
+    }
+
+    fn format_options(&self, formatter: &mut HelpFormatter) {
+        ()
+    }
+
+    fn format_epilog(&self, formatter: &mut HelpFormatter) {
+    }
+
+    fn format_help(&self, formatter: &mut HelpFormatter) {
+        self.format_usage(formatter);
+        self.format_help_text(formatter);
+        self.format_options(formatter);
+        self.format_epilog(formatter);
     }
 
     pub fn get_help(&self) -> String {
-        "help".to_string()
+        let mut formatter = self.make_formatter();
+        self.format_help(&mut formatter);
+        formatter.getvalue()
     }
 
     /// Returns the help option.
@@ -83,14 +121,23 @@ impl Command {
         callback(args);
     }
 
+    /// Get all options plus help option.
+    fn get_options(&self) -> Vec<Options> {
+        let mut options: Vec<Options> = Vec::new();
+        for option in self.options.iter() {
+            options.push(option.clone());
+        }
+        let help_option = self.get_help_option();
+        options.push(help_option);
+        return options;
+    }
+
     /// Creates the underlying option parser for this command.
     fn make_parser(&self) -> getopts::Options {
         let mut parser = getopts::Options::new();
-        for option in self.options.iter() {
+        for option in self.get_options().iter() {
             option.add_to_parser(&mut parser);
         }
-        let help_option = self.get_help_option();
-        help_option.add_to_parser(&mut parser);
         return parser;
     }
 

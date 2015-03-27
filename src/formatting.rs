@@ -4,6 +4,7 @@
 
 use std;
 use std::cmp::max;
+use std::slice::SliceConcatExt;
 
 
 /// This helps with formatting text-based help pages.
@@ -30,18 +31,36 @@ impl HelpFormatter {
     }
 
     /// Increases the indentation.
-    fn indent(&mut self) {
+    pub fn indent(&mut self) {
         self.current_indent = self.current_indent + self.indent_increment;
     }
 
     /// Decreases the indentation.
-    fn dedent(&mut self) {
+    pub fn dedent(&mut self) {
         self.current_indent = self.current_indent - self.indent_increment;
     }
 
     /// Writes a string into the internal buffer.
     pub fn write(&mut self, s: String) {
         self.buffer.push(s);
+    }
+
+    /// Writes a paragraph into the internal buffer.
+    pub fn write_paragraph(&mut self) {
+        if !self.buffer.is_empty() {
+            self.buffer.push(String::from_str("\n"));
+        }
+    }
+
+    /// Writes re-indented text into the buffer.
+    pub fn write_text(&mut self, text: String) {
+        let text_width = max(self.width - self.current_indent, 10);
+        let mut indent = String::new();
+        for _ in range(0, self.current_indent) {
+            indent.push_str(" ");
+        }
+        self.write(wrap_text(text, text_width, indent.as_slice(), indent.as_slice()));
+        self.write(String::from_str("\n"));
     }
 
     /// Writes a usage line.
@@ -56,6 +75,11 @@ impl HelpFormatter {
         }
         self.write(wrap_text(args, text_width, " ", indent.as_slice()));
         self.write(String::from_str("\n"));
+    }
+
+    /// Get buffer contents.
+    pub fn getvalue(&self) -> String {
+        self.buffer.concat()
     }
 }
 

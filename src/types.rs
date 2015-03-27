@@ -14,6 +14,7 @@ pub type CommandCallback = fn(Params);
 
 
 /// Options are usually optional values on the command line.
+#[derive(Clone)]
 pub struct Options {
     short_name: &'static str,
     long_name: &'static str,
