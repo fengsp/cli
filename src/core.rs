@@ -152,6 +152,8 @@ impl Command {
         let program = args.remove(0);
         let program_path = Path::new(program.as_slice());
         let program_name = program_path.file_name().unwrap().to_str().unwrap();
+        // Hook for the Bash completion.
+        // bashcomplete(self, program_name);
         self.invoke(program_name.to_string(), args);
     }
 }
