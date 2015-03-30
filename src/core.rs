@@ -23,7 +23,6 @@ pub struct Command {
     help: String,  // The help message to use for this command
     epilog: String,  // Printed at the end of the help page
     short_help: String,  // The short help to use for this command, this is shown on the command listing of the parent command
-    add_help_option: bool,  // Whether this command registers "--help", default to be true
 }
 
 
@@ -37,7 +36,6 @@ impl Command {
             help: String::new(),
             epilog: String::new(),
             short_help: String::new(),
-            add_help_option: true,
         }
     }
 
@@ -89,6 +87,12 @@ impl Command {
     }
 
     fn format_epilog(&self, formatter: &mut HelpFormatter) {
+        if !self.epilog.is_empty() {
+            formatter.write_paragraph();
+            formatter.indent();
+            formatter.write_text(self.epilog.clone());
+            formatter.dedent();
+        }
     }
 
     fn format_help(&self, formatter: &mut HelpFormatter) {
