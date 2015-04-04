@@ -60,6 +60,37 @@ impl Options {
             }
         }
     }
+
+    pub fn get_help_record(&self) -> (String, String) {
+        let mut options = String::from_str("");
+        options.push_str("-");
+        options.push_str(self.short_name);
+        options.push_str(", ");
+        options.push_str("--");
+        options.push_str(self.long_name);
+
+        let mut extra = String::from_str("");
+        if self.default.is_some() {
+            extra.push_str("default: ");
+            extra.push_str(self.default.unwrap());
+        }
+        if self.required {
+            if extra.is_empty() {
+                extra.push_str("required");
+            } else {
+                extra.push_str("; required");
+            }
+        }
+        let mut help: String = self.help.to_string();
+        if self.help.len() != 0 {
+            help.push_str("  ");
+        }
+        if !extra.is_empty() {
+            help = format!("{}[{}]", help, extra);
+        }
+
+        return (options, help);
+    }
 }
 
 
