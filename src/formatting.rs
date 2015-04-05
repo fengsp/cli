@@ -52,6 +52,34 @@ impl HelpFormatter {
         }
     }
 
+    /// Writes a heading.
+    pub fn write_heading(&mut self, heading: &str) {
+        let current_indent = self.current_indent;
+        self.write(format!("{:>2$}{}\n", "", heading, current_indent));
+    }
+
+    /// Writes a definition list into the buffer.
+    pub fn write_dl(&mut self, rows: Vec<(String, String)>) {
+        let col_spacing: usize = 2;
+        let current_indent = self.current_indent;
+        for &(ref first, ref second) in rows.iter() {
+            self.write(format!("{:>2$}{}", "", first, current_indent));
+            self.write(format!("{:>2$}{}\n", "", second, col_spacing));
+        }
+    }
+
+    /// Helper function that writes a paragraph, a heading, and indent.
+    pub fn enter_section(&mut self, name: &str) {
+        self.write_paragraph();
+        self.write_heading(name);
+        self.indent();
+    }
+
+    /// Leave section indent state.
+    pub fn exit_section(&mut self) {
+        self.dedent();
+    }
+
     /// Writes re-indented text into the buffer.
     pub fn write_text(&mut self, text: String) {
         let text_width = max(self.width - self.current_indent, 10);

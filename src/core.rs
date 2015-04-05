@@ -83,8 +83,14 @@ impl Command {
     }
 
     fn format_options(&self, formatter: &mut HelpFormatter) {
-        let opts: Vec<String> = Vec::new();
+        let mut opts: Vec<(String, String)> = Vec::new();
         for option in self.get_options().iter() {
+            opts.push(option.get_help_record());
+        }
+        if !opts.is_empty() {
+            formatter.enter_section("Options");
+            formatter.write_dl(opts);
+            formatter.exit_section();
         }
     }
 
