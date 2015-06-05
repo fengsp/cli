@@ -84,10 +84,10 @@ impl HelpFormatter {
     pub fn write_text(&mut self, text: String) {
         let text_width = max(self.width - self.current_indent, 10);
         let mut indent = String::new();
-        for _ in range(0, self.current_indent) {
+        for _ in (0..self.current_indent) {
             indent.push_str(" ");
         }
-        self.write(wrap_text(text, text_width, indent.as_slice(), indent.as_slice()));
+        self.write(wrap_text(text, text_width, &indent, &indent));
         self.write(String::from_str("\n"));
     }
 
@@ -98,10 +98,10 @@ impl HelpFormatter {
         self.write(prefix);
         let text_width = max(self.width - self.current_indent - prefix_len, 10);
         let mut indent = String::from_str(" ");
-        for _ in range(0, prefix_len) {
+        for _ in (0..prefix_len) {
             indent.push_str(" ");
         }
-        self.write(wrap_text(args, text_width, " ", indent.as_slice()));
+        self.write(wrap_text(args, text_width, " ", &indent));
         self.write(String::from_str("\n"));
     }
 
