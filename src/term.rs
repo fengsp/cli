@@ -2,18 +2,17 @@
 // Copyright (c) 2015 by Shipeng Feng.
 // Licensed under the BSD License, see LICENSE for more details.
 
-use std::old_io;
 use std::fmt;
+use std::fs;
 use std::ascii::AsciiExt;
 use std::io;
 use std::str;
 use std::process;
 use std::io::{Read, Write};
-use std::old_path::GenericPath;
 use std::collections::HashMap;
 use std::path::Path;
 use std::fs::File;
-use std::old_io::TempDir;
+use tempdir::TempDir;
 
 use libc;
 use libc::funcs::bsd44::ioctl;
@@ -79,7 +78,7 @@ impl Color {
 /// ```rust,no_run
 /// use cli::{Style, Red};
 ///
-/// let mut text = Style::new(String::from_str("hello"));
+/// let mut text = Style::new("hello".to_string());
 /// text.fg(Red);
 /// println!("{}", text);
 /// ```
@@ -195,7 +194,7 @@ impl fmt::Display for Style {
                 try!(f.write_str("\x1b[27m"));
             }
         }
-        try!(f.write_str(self.text.as_slice()));
+        try!(f.write_str(&self.text));
         // Currently we always reset.
         try!(f.write_str("\x1b[0m"));
 
@@ -218,7 +217,8 @@ fn build_prompt_text(text: &str, suffix: &str, show_default: bool,
 
 fn get_prompt_input(prompt_text: &str, hide_input: bool) -> String {
     print!("{}", prompt_text);
-    let input = old_io::stdin().read_line().ok().expect("Failed to read line");
+    let mut input = String::new(); 
+    io::stdin().read_line(&mut input).ok().expect("Failed to read line");
     return input.trim_right_matches("\n").to_string();
 }
 
@@ -238,7 +238,7 @@ pub fn prompt(text: &str, default: Option<&str>, hide_input: bool, confirmation:
 
     let mut prompt_input: String;
     loop {
-        prompt_input = get_prompt_input(prompt_text.as_slice(), hide_input);
+        prompt_input = get_prompt_input(&prompt_text, hide_input);
         if prompt_input != String::from_str("") {
             break
         } else if default.is_some() {
@@ -279,7 +279,7 @@ pub fn confirm(text: &str, default: bool, prompt_suffix: &str, show_default: boo
     let prompt_text = build_prompt_text(text, prompt_suffix, show_default, default_string);
 
     loop {
-        let prompt_input = get_prompt_input(prompt_text.as_slice(), false).to_ascii_lowercase();
+        let prompt_input = get_prompt_input(&prompt_text, false).to_ascii_lowercase();
         match prompt_input.trim() {
             "y" | "yes" => { return true; },
             "n" | "no"  => { return false; },
@@ -298,7 +298,7 @@ struct WinSize {
     ws_ypixel: libc::c_ushort,  // vertical size, pixels
 }
 
-const TIOCGWINSZ: libc::c_ulong = 0x40087468;
+const TIOCGWINSZ: i32  = 0x40087468;
 
 /// Returns the current size of the terminal in the form
 /// `(width, height)` in columns and rows, usage example:
@@ -319,14 +319,14 @@ pub fn get_terminal_size() -> io::Result<(isize, isize)> {
     let r = unsafe { ioctl(libc::STDOUT_FILENO, TIOCGWINSZ, &w) };
     match r {
         0 => Ok((w.ws_col as isize, w.ws_row as isize)),
-        code => Err(io::Error::from_os_error(code)),
+        code => Err(io::Error::from_raw_os_error(code)),
     }
 }
 
 
 /// Show text via an pager.
 pub fn print_via_pager(text: &str) {
-    let mut pager = process::Command::new("less").stdin(process::Stdio::capture())
+    let mut pager = process::Command::new("less").stdin(process::Stdio::piped())
                                                  .spawn()
                                                  .unwrap_or_else(|e| { panic!("failed to spawn less: {}", e) });
     pager.stdin.as_mut().unwrap().write_all(text.as_bytes())
@@ -344,7 +344,7 @@ pub fn isatty() -> bool {
 
 /// Clears the terminal screen.
 pub fn clear() {
-    old_io::stdout().write_all("\x1b[2J\x1b[1;1H".as_bytes()).unwrap()
+    io::stdout().write_all("\x1b[2J\x1b[1;1H".as_bytes()).unwrap()
 }
 
 
@@ -363,7 +363,7 @@ const AFTER_BAR: &'static str = "\x1b[?25h\n";
 ///
 /// let mut bar = ProgressBar::new(100, "Demo");
 /// bar.begin();
-/// for _ in range(0, 100) {
+/// for _ in (0..100) {
 ///     // Do something here
 ///     bar.next();
 /// }
@@ -420,7 +420,7 @@ impl ProgressBar {
         if self.is_hidden {
             return
         }
-        old_io::stdout().write_all(AFTER_BAR.as_bytes()).unwrap()
+        io::stdout().write_all(AFTER_BAR.as_bytes()).unwrap()
     }
 
     fn percent(&self) -> f32 {
@@ -463,10 +463,10 @@ impl ProgressBar {
         let mut bar: Vec<u8> = vec![];
         let fill_length = (self.percent() * self.width as f32) as isize;
         let empty_length = self.width - fill_length;
-        for _ in range(0, fill_length) {
+        for _ in (0..fill_length) {
             bar.push(self.fill_char);
         }
-        for _ in range(0, empty_length) {
+        for _ in (0..empty_length) {
             bar.push(self.empty_char);
         }
         let bar_str = str::from_utf8(bar.as_slice()).unwrap();
@@ -484,18 +484,18 @@ impl ProgressBar {
         if self.is_hidden {
             return
         }
-        old_io::stdout().write_all(BEFORE_BAR.as_bytes()).unwrap();
+        io::stdout().write_all(BEFORE_BAR.as_bytes()).unwrap();
         let last_line_width = self.last_line_width;
         let line = self.format_progress_line();
         let line_width = line.len();
         self.last_line_width = line_width;
-        old_io::stdout().write_all(line.as_bytes()).unwrap();
+        io::stdout().write_all(line.as_bytes()).unwrap();
         if last_line_width > line_width {
             let mut clear_string = "".to_string();
-            for _ in range(0, last_line_width - line_width) {
+            for _ in (0..last_line_width - line_width) {
                 clear_string = clear_string + " ";    
             }
-            old_io::stdout().write_all(clear_string.as_bytes()).unwrap();
+            io::stdout().write_all(clear_string.as_bytes()).unwrap();
         }
     }
 
@@ -564,7 +564,7 @@ impl Editor {
     /// use cli::Editor;
     ///
     /// let editor = Editor::new("vim");
-    /// let text = String::from_str("hello");
+    /// let text = ("hello".to_string());
     /// let edited = editor.edit(text, ".txt");
     /// ```
     ///
@@ -572,8 +572,8 @@ impl Editor {
         let tmpdir = TempDir::new("cli").unwrap();
         let tmpname = "cli_eidtor".to_string() + extension;
         let mut filepath = tmpdir.path().clone();
-        filepath.push(tmpname.as_slice());
-        let filename = filepath.as_str().unwrap();
+        filepath.join(&tmpname);
+        let filename = filepath.to_str().unwrap();
         let mut tmpfile = File::create(filename).unwrap();
         tmpfile.write(text.as_bytes()).unwrap();
         tmpfile.flush().unwrap();
@@ -583,7 +583,7 @@ impl Editor {
         let mut edited_file = File::open(filename).unwrap();
         let mut edited_text = String::new();
         edited_file.read_to_string(&mut edited_text).unwrap();
-        old_io::fs::unlink(&filepath).unwrap();
+        fs::remove_file(&filepath).unwrap();
         
         return edited_text;
     }

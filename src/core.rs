@@ -3,6 +3,7 @@
 // Licensed under the BSD License, see LICENSE for more details.
 
 use std::os;
+use std::env;
 use std::path::Path;
 use std::slice::SliceConcatExt;
 
@@ -64,7 +65,7 @@ impl Command {
         for argument in self.arguments.iter() {
             pieces.push(argument.get_usage_piece());
         }
-        formatter.write_usage(self.name.as_slice(), pieces.concat(), "Usage: ")
+        formatter.write_usage(&self.name, pieces.concat(), "Usage: ")
     }
 
     pub fn get_usage(&self) -> String {
@@ -160,12 +161,12 @@ impl Command {
 
     /// This is the way to run one command application.
     pub fn run(&self) {
-        let mut args = os::args();
-        let program = args.remove(0);
-        let program_path = Path::new(program.as_slice());
+        let mut args = env::args();
+        let program = args.nth(0).unwrap();
+        let program_path = Path::new(&program);
         let program_name = program_path.file_name().unwrap().to_str().unwrap();
         // Hook for the Bash completion.
         // bashcomplete(self, program_name);
-        self.invoke(program_name.to_string(), args);
+        self.invoke(program_name.to_string(), args.collect());
     }
 }
